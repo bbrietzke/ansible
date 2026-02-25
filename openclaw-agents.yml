@@ -1,0 +1,7 @@
+---
+- name: Configure OpenClaw agent boxes
+  hosts: agents
+  become: true
+  roles:
+    - default
+    - node_exporter_binary

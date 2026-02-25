@@ -1,0 +1,14 @@
+---
+all:
+  children:
+    agents:
+      hosts:
+        taniJunko:
+          ansible_host: 192.168.3.149
+        SARAh:
+          ansible_host: 192.168.3.150
+        lucille:
+          ansible_host: 192.168.3.152
+      vars:
+        ansible_user: bbrietzke
+        ansible_become: true
