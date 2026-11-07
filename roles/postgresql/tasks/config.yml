@@ -1,58 +1,37 @@
 ---
-- name: Does postgresql.conf exist?
-  stat: 
-    path: /etc/postgresql/14/main/postgresql.conf
-  register: postgresql_conf
+- name: Find installed PostgreSQL clusters
+  find:
+    paths: /etc/postgresql
+    file_type: directory
+    recurse: no
+  register: postgres_installed_versions
+  when: postgres_version is not defined
 
-- name: Update postgresql.conf for listening IPs
-  when: postgresql_conf.stat.exists
-  notify: restart_postgres
-  lineinfile:
-    path: "/etc/postgresql/14/main/postgresql.conf"
-    line: "listen_addresses = '*'"
-    state: "{{postgres_state}}"
+- name: Use the newest installed PostgreSQL major version
+  set_fact:
+    postgres_version: "{{ postgres_installed_versions.files | map(attribute='path') | map('basename') | map('int') | max }}"
+  when:
+    - postgres_version is not defined
+    - postgres_installed_versions.matched | default(0) > 0
 
-- name: Update postgresql.conf for listening IPs
-  when: postgresql_conf.stat.exists
-  notify: restart_postgres
-  lineinfile:
-    state: "{{postgres_state}}"
-    path: "/etc/postgresql/14/main/postgresql.conf"
-    line: |
-      max_connections = 100
-      shared_buffers = 2GB
-      effective_cache_size = 6GB
-      maintenance_work_mem = 512MB
-      checkpoint_completion_target = 0.9
-      wal_buffers = 16MB
-      default_statistics_target = 100
-      random_page_cost = 1.1
-      effective_io_concurrency = 300
-      work_mem = 5242kB
-      min_wal_size = 1GB
-      max_wal_size = 4GB
-      max_worker_processes = 4
-      max_parallel_workers_per_gather = 2
-      max_parallel_workers = 4
-      max_parallel_maintenance_workers = 2
+- name: Configure PostgreSQL {{ postgres_version | default('') }}
+  when: postgres_version is defined
+  block:
+    - name: Write Ansible-managed postgresql.conf overrides
+      notify: restart_postgres
+      template:
+        src: postgresql.conf.j2
+        dest: "/etc/postgresql/{{ postgres_version }}/main/conf.d/ansible.conf"
+        owner: postgres
+        group: postgres
+        mode: 0644
+      when: postgres_state == "present"
 
-- name: Does pg_hba.conf exist?
-  stat: 
-    path: /etc/postgresql/14/main/pg_hba.conf
-  register: pg_hba_conf
-
-- name: Update pg_hba.conf where folks can log in from
-  when: pg_hba_conf.stat.exists
-  notify: restart_postgres
-  lineinfile:
-    path: "/etc/postgresql/14/main/pg_hba.conf"
-    line: "host all all 0.0.0.0/0 md5"
-    state: "{{postgres_state}}"
-
-- name: Update pg_hba.conf where folks can log in from
-  when: pg_hba_conf.stat.exists
-  notify: restart_postgres
-  lineinfile:
-    path: "/etc/postgresql/14/main/pg_hba.conf"
-    line: "host all all ::/0 md5"
-    state: "{{postgres_state}}"
+    - name: Allow remote logins in pg_hba.conf
+      notify: restart_postgres
+      lineinfile:
+        path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
+        regexp: "^host\\s+all\\s+all\\s+{{ item | regex_escape }}\\s"
+        line: "host all all {{ item }} {{ postgres_auth_method }}"
+        state: "{{ postgres_state }}"
+      loop: "{{ postgres_remote_networks }}"

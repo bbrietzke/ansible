@@ -1,18 +1,26 @@
 ---
-- name: copy over nodesource.list
-  template:
-    src: "templates/nodesource.list.j2"
-    dest: "/etc/apt/sources.list.d/nodesource.list"
-    owner: root
-    group: root
-    mode: 0644
+- name: Install python3-debian (required by deb822_repository)
+  apt:
+    name: python3-debian
+    state: present
 
-- name: install NodeJs
-  apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+- name: Remove legacy NodeSource apt source (pre-deb822)
+  file:
+    path: /etc/apt/sources.list.d/nodesource.list
+    state: absent
+
+- name: Install NodeSource APT Repository
+  deb822_repository:
+    name: nodesource
+    types: deb
+    uris: "{{ nodejs_nodesource }}"
+    suites: nodistro
+    components: main
+    signed_by: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
     state: present
 
 - name: install NodeJs
   apt:
     state: latest
+    update_cache: yes
     name: nodejs

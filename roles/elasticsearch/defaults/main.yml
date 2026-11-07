@@ -1,6 +1,7 @@
 ---
 
 elastic_state: present
+elastic_major_version: 9
 
 elastic_packages:
   - elasticsearch

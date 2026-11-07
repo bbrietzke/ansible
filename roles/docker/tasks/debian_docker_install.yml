@@ -15,14 +15,24 @@
   notify:
     - restart_machine
 
-- name: Install Docker GPG key
-  apt_key:
-    url: http://download.docker.com/linux/ubuntu/gpg
-    state: "{{ docker_state }}"
+- name: Install python3-debian (required by deb822_repository)
+  apt:
+    name: python3-debian
+    state: present
+
+- name: Remove legacy Docker apt source (pre-deb822)
+  file:
+    path: /etc/apt/sources.list.d/download_docker_com_linux_ubuntu.list
+    state: absent
 
 - name: Install Docker APT Repository
-  apt_repository: 
-    repo: "deb https://download.docker.com/linux/ubuntu {{ ubuntu_version }} stable"
+  deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: "{{ ubuntu_version }}"
+    components: stable
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
     state: "{{ docker_state }}"
   tags:
     - sw

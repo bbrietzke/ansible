@@ -1,4 +1,8 @@
-site_name: Raspberry Pi Ansible Setup
+site_name: Home Network Ansible Setup
+site_description: Ansible playbooks and roles for maintaining my home network infrastructure.
+repo_url: https://github.com/bbrietzke/ansible
+edit_uri: edit/master/docs/
+
 nav:
     - Home: index.md
 

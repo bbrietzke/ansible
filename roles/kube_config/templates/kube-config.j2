@@ -1,4 +1,4 @@
-apiVersion: kubeadm.k8s.io/v1beta3
+apiVersion: kubeadm.k8s.io/v1beta4
 bootstrapTokens:
 - groups:
   - system:bootstrappers:kubeadm:default-node-token
@@ -16,10 +16,11 @@ nodeRegistration:
   imagePullPolicy: IfNotPresent
   name: {{ ansible_hostname }}
   taints: null
+timeouts:
+  controlPlaneComponentHealthCheck: 4m0s
 ---
-apiServer:
-  timeoutForControlPlane: 4m0s
-apiVersion: kubeadm.k8s.io/v1beta3
+apiServer: {}
+apiVersion: kubeadm.k8s.io/v1beta4
 certificatesDir: /etc/kubernetes/pki
 clusterName: home
 controllerManager: {}
@@ -30,9 +31,12 @@ etcd:
 imageRepository: registry.k8s.io
 kind: ClusterConfiguration
 kubernetesVersion: {{ kubernetes_version }}
-cgroupDriver: systemd
 networking:
   dnsDomain: cluster.local
   serviceSubnet: {{ service_subnet }}
   podSubnet: {{ pod_subnet }}
 scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd

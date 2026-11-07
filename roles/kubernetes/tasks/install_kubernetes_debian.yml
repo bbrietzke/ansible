@@ -9,17 +9,41 @@
     - sw
     - apt
 
-- name: Install Kubernetes GPG key
-  apt_key:
-    url: https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key
-    state: "{{ kubernetes_state }}"
+- name: Install python3-debian (required by deb822_repository)
+  apt:
+    name: python3-debian
+    state: present
   tags:
     - sw
-    - gpg
+    - apt
+
+- name: Find legacy Kubernetes apt sources (pre-deb822)
+  find:
+    paths: /etc/apt/sources.list.d
+    patterns:
+      - "pkgs_k8s_io_*.list"
+      - "apt_kubernetes_io*.list"
+  register: legacy_k8s_sources
+  tags:
+    - sw
+    - apt
+
+- name: Remove legacy Kubernetes apt sources
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ legacy_k8s_sources.files }}"
+  tags:
+    - sw
+    - apt
 
 - name: Install Kubernetes APT Repository
-  apt_repository: 
-    repo: deb https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /
+  deb822_repository:
+    name: kubernetes
+    types: deb
+    uris: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor_version }}/deb/
+    suites: "/"
+    signed_by: https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_minor_version }}/deb/Release.key
     state: "{{ kubernetes_state }}"
   tags:
     - sw

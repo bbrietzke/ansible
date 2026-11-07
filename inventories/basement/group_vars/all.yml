@@ -2,4 +2,4 @@
 ansible_python_interpreter: /usr/bin/python3
 ansible_pip_exe: /usr/bin/python3 -m pip
 ansible_user: ansible
-ubuntu_version: jammy
+ubuntu_version: resolute

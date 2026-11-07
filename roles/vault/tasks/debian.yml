@@ -1,13 +1,23 @@
 ---
 
-- name: Install Vault GPG key
-  apt_key:
-    url: https://apt.releases.hashicorp.com/gpg
-    state: "{{ vault_state }}"
+- name: Install python3-debian (required by deb822_repository)
+  apt:
+    name: python3-debian
+    state: present
 
-- name: Install Vault APT Repository
-  apt_repository: 
-    repo: "deb https://apt.releases.hashicorp.com {{ ubuntu_version }} main"
+- name: Remove legacy HashiCorp apt source (pre-deb822)
+  file:
+    path: /etc/apt/sources.list.d/apt_releases_hashicorp_com.list
+    state: absent
+
+- name: Install HashiCorp APT Repository
+  deb822_repository:
+    name: hashicorp
+    types: deb
+    uris: https://apt.releases.hashicorp.com
+    suites: "{{ ubuntu_version }}"
+    components: main
+    signed_by: https://apt.releases.hashicorp.com/gpg
     state: "{{ vault_state }}"
 
 - name: Install Vault packages

@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# Loaded via include_dir = 'conf.d' in the stock postgresql.conf.
+
+listen_addresses = '{{ postgres_listen_addresses }}'
+
+{% for key, value in postgres_settings.items() %}
+{{ key }} = {{ value }}
+{% endfor %}

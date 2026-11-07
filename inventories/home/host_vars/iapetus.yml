@@ -1,6 +1,6 @@
 ---
 ansible_user: ubuntu
-ubuntu_version: jammy
+ubuntu_version: resolute
 ansible_host: iapetus.local
 backplane_fixed_ip: 192.168.1.229
 

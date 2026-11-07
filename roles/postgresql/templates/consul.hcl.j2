@@ -1,12 +1,12 @@
 service {
     name    = "pgsql"
     id      = "pgsql-{{ ansible_hostname | lower }}"
-    port    = 6379
+    port    = {{ postgres_port }}
     tags    = ["pgsql", "static", "ansible"]
 
     meta    = {
         managed_by      =   "ansible"
-        version         =   "14.7"
+        version         =   "{{ postgres_version | default('unknown') }}"
     }
 
     check {
