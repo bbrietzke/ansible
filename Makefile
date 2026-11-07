@@ -1,4 +1,4 @@
-.PHONY: work home docs test image
+.PHONY: work home docs test image kube-update
 
 EXE := $(shell which ansible-playbook)
 EXE_OPTIONS :=  						# make EXE_OPTIONS=--ask-become-pass updates
@@ -32,6 +32,9 @@ slurm:
 
 kube:
 	$(EXE) $(EXE_OPTIONS) -i inventories/$(DEFAULT_GROUP)/hosts local_kube.yml
+
+kube-update:
+	$(EXE) $(EXE_OPTIONS) -i inventories/kubernetes/hosts kube_update.yml
 
 openclaw:
 	$(EXE) $(EXE_OPTIONS) -i inventories/openclaw/hosts openclaw-agents.yml

@@ -1,0 +1,27 @@
+---
+# kubectl runs on the Ansible controller (delegate_to: localhost).
+kube_update_kubectl: kubectl
+# Empty means the controller's current kubeconfig context.
+kube_update_context: ""
+kube_update_node_name: "{{ inventory_hostname }}"
+
+# How long a drain may wait on PodDisruptionBudgets before failing.
+kube_update_drain_timeout: 15m
+
+# Kept on hold so full-upgrade never bumps Kubernetes outside of kubeadm.
+kube_update_held_packages:
+  - kubelet
+  - kubeadm
+  - kubectl
+
+kube_update_reboot_timeout: 900
+
+# Waiting for the API server / node to report Ready after a reboot.
+kube_update_ready_retries: 60
+kube_update_ready_delay: 10
+
+# Waiting for all pods to be Running/Succeeded before moving to the next node.
+kube_update_settle_retries: 60
+kube_update_settle_delay: 10
+
+kube_update_kubectl_cmd: "{{ [kube_update_kubectl] + (['--context', kube_update_context] if kube_update_context else []) }}"

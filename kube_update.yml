@@ -1,0 +1,15 @@
+---
+# Rolling OS update of the Kubernetes nodes, one node at a time:
+# drain -> apt full-upgrade -> autoremove -> reboot (if needed) -> uncordon.
+#
+#   make kube-update EXE_OPTIONS=--ask-become-pass
+#
+# kubectl runs on the controller, so its kubeconfig must reach the cluster.
+- name: Rolling update of Kubernetes nodes
+  hosts: all
+  become: yes
+  gather_facts: no
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - kube_node_update

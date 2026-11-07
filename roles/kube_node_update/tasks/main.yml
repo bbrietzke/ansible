@@ -1,0 +1,72 @@
+---
+- name: Update Kubernetes node {{ kube_update_node_name }}
+  block:
+    - name: Cordon and drain {{ kube_update_node_name }}
+      delegate_to: localhost
+      become: false
+      command:
+        argv: "{{ kube_update_kubectl_cmd + ['drain', kube_update_node_name, '--ignore-daemonsets', '--delete-emptydir-data', '--timeout=' ~ kube_update_drain_timeout] }}"
+      changed_when: true
+
+    - name: Keep Kubernetes packages on hold
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: "{{ kube_update_held_packages }}"
+
+    - name: Update apt cache and full-upgrade
+      apt:
+        update_cache: yes
+        upgrade: dist
+      register: kube_update_upgrade
+
+    - name: Remove packages that are no longer needed
+      apt:
+        autoremove: yes
+        autoclean: yes
+
+    - name: Check whether the OS is asking for a reboot
+      stat:
+        path: /var/run/reboot-required
+      register: kube_update_reboot_required
+
+    - name: Reboot {{ kube_update_node_name }}
+      reboot:
+        reboot_timeout: "{{ kube_update_reboot_timeout }}"
+      when: kube_update_upgrade.changed or kube_update_reboot_required.stat.exists
+
+    - name: Wait for {{ kube_update_node_name }} to report Ready
+      delegate_to: localhost
+      become: false
+      command:
+        argv: "{{ kube_update_kubectl_cmd + ['get', 'node', kube_update_node_name, '-o', 'jsonpath={.status.conditions[?(@.type==\"Ready\")].status}'] }}"
+      register: kube_update_ready
+      until: kube_update_ready.rc == 0 and kube_update_ready.stdout == "True"
+      retries: "{{ kube_update_ready_retries }}"
+      delay: "{{ kube_update_ready_delay }}"
+      changed_when: false
+
+  always:
+    # Runs even if a step above failed, so the node is never left cordoned.
+    # Retries because the API server is down while a control-plane node reboots.
+    - name: Uncordon {{ kube_update_node_name }}
+      delegate_to: localhost
+      become: false
+      command:
+        argv: "{{ kube_update_kubectl_cmd + ['uncordon', kube_update_node_name] }}"
+      register: kube_update_uncordon
+      until: kube_update_uncordon.rc == 0
+      retries: "{{ kube_update_ready_retries }}"
+      delay: "{{ kube_update_ready_delay }}"
+      changed_when: "'already uncordoned' not in kube_update_uncordon.stdout"
+
+- name: Wait for all pods to be Running or Completed before the next node
+  delegate_to: localhost
+  become: false
+  command:
+    argv: "{{ kube_update_kubectl_cmd + ['get', 'pods', '--all-namespaces', '--field-selector=status.phase!=Running,status.phase!=Succeeded', '-o', 'name'] }}"
+  register: kube_update_unsettled
+  until: kube_update_unsettled.rc == 0 and kube_update_unsettled.stdout | trim == ""
+  retries: "{{ kube_update_settle_retries }}"
+  delay: "{{ kube_update_settle_delay }}"
+  changed_when: false
