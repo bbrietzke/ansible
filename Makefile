@@ -33,21 +33,7 @@ slurm:
 kube:
 	$(EXE) $(EXE_OPTIONS) -i inventories/$(DEFAULT_GROUP)/hosts local_kube.yml
 
-whatever:
-	cp boot/user-data/user-data.rpi /Volumes/system-boot/user-data
-	touch /Volumes/system-boot/meta-data
-	touch /Volumes/system-boot/ssh
-	diskutil eject /Volumes/system-boot
+openclaw:
+	$(EXE) $(EXE_OPTIONS) -i inventories/openclaw/hosts openclaw-agents.yml
 
-wifi:
-	cp boot/network-config /Volumes/system-boot/network-config
 
-octopi:
-	cp boot/wpa_supplicant.conf /Volumes/boot/
-	cp boot/octopi.txt /Volumes/boot/octopi.txt
-	touch /Volumes/boot/ssh
-
-retropie:
-	touch /Volumes/boot/ssh && \
-	cp boot/wpa_supplicant.conf /Volumes/boot/  && \
-	diskutil unmountDisk /dev/disk2
