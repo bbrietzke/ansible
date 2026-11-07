@@ -1,4 +1,4 @@
-.PHONY: work home docs test image kube-update
+.PHONY: work home docs test image kube-update kube-upgrade
 
 EXE := $(shell which ansible-playbook)
 EXE_OPTIONS :=  						# make EXE_OPTIONS=--ask-become-pass updates
@@ -35,6 +35,10 @@ kube:
 
 kube-update:
 	$(EXE) --ask-become-pass $(EXE_OPTIONS) -i inventories/kubernetes/hosts kube_update.yml
+
+kube-upgrade:
+	$(if $(VERSION),,$(error VERSION is required, e.g. make kube-upgrade VERSION=1.37.2))
+	$(EXE) --ask-become-pass $(EXE_OPTIONS) -i inventories/kubernetes/hosts kube_upgrade.yml -e kube_upgrade_version=$(VERSION)
 
 openclaw:
 	$(EXE) $(EXE_OPTIONS) -i inventories/openclaw/hosts openclaw-agents.yml

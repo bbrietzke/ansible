@@ -1,0 +1,127 @@
+---
+# Upgrades one node. kubeadm first, then the kubelet behind a drain/uncordon.
+- name: Get installed Kubernetes versions on {{ kube_upgrade_node_name }}
+  delegate_to: localhost
+  become: false
+  command:
+    argv: "{{ kube_upgrade_kubectl_cmd + ['get', 'node', kube_upgrade_node_name, '-o', 'jsonpath={.status.nodeInfo.kubeletVersion}'] }}"
+  register: kube_upgrade_kubelet_before
+  changed_when: false
+
+- name: Get installed kubeadm version
+  command: kubeadm version -o short
+  register: kube_upgrade_kubeadm_before
+  changed_when: false
+
+- name: Get control-plane version
+  delegate_to: localhost
+  become: false
+  command:
+    argv: "{{ kube_upgrade_kubectl_cmd + ['version', '-o', 'json'] }}"
+  register: kube_upgrade_server_before
+  changed_when: false
+
+- name: Upgrade {{ kube_upgrade_node_name }} to v{{ kube_upgrade_target }}
+  when: >-
+    kube_upgrade_kubelet_before.stdout != 'v' ~ kube_upgrade_target
+    or kube_upgrade_kubeadm_before.stdout != 'v' ~ kube_upgrade_target
+    or (inventory_hostname == kube_upgrade_first_control_plane
+        and (kube_upgrade_server_before.stdout | from_json).serverVersion.gitVersion != 'v' ~ kube_upgrade_target)
+  block:
+    - name: Install kubeadm {{ kube_upgrade_target }}
+      apt:
+        name: "kubeadm={{ kube_upgrade_target }}-*"
+        allow_change_held_packages: yes
+        state: present
+
+    - name: Keep kubeadm on hold
+      dpkg_selections:
+        name: kubeadm
+        selection: hold
+
+    - name: Check kubeadm is now v{{ kube_upgrade_target }}
+      command: kubeadm version -o short
+      register: kube_upgrade_kubeadm_after
+      changed_when: false
+      failed_when: kube_upgrade_kubeadm_after.stdout != 'v' ~ kube_upgrade_target
+
+    - name: Upgrade the control plane
+      when: inventory_hostname == kube_upgrade_first_control_plane
+      block:
+        - name: Check the upgrade plan
+          command: "kubeadm upgrade plan v{{ kube_upgrade_target }}"
+          changed_when: false
+
+        - name: Apply the control-plane upgrade
+          command: "kubeadm upgrade apply v{{ kube_upgrade_target }} --yes"
+          when: (kube_upgrade_server_before.stdout | from_json).serverVersion.gitVersion != 'v' ~ kube_upgrade_target
+
+    - name: Upgrade the local node configuration
+      command: kubeadm upgrade node
+      when: inventory_hostname != kube_upgrade_first_control_plane
+
+    - name: Upgrade the kubelet
+      block:
+        - name: Cordon and drain {{ kube_upgrade_node_name }}
+          delegate_to: localhost
+          become: false
+          command:
+            argv: "{{ kube_upgrade_kubectl_cmd + ['drain', kube_upgrade_node_name, '--ignore-daemonsets', '--delete-emptydir-data', '--timeout=' ~ kube_upgrade_drain_timeout] }}"
+          changed_when: true
+
+        - name: Install kubelet and kubectl {{ kube_upgrade_target }}
+          apt:
+            name:
+              - "kubelet={{ kube_upgrade_target }}-*"
+              - "kubectl={{ kube_upgrade_target }}-*"
+            allow_change_held_packages: yes
+            state: present
+
+        - name: Keep kubelet and kubectl on hold
+          dpkg_selections:
+            name: "{{ item }}"
+            selection: hold
+          loop:
+            - kubelet
+            - kubectl
+
+        - name: Restart the kubelet
+          systemd:
+            name: kubelet
+            state: restarted
+            daemon_reload: yes
+
+        - name: Wait for {{ kube_upgrade_node_name }} to be Ready on v{{ kube_upgrade_target }}
+          delegate_to: localhost
+          become: false
+          command:
+            argv: "{{ kube_upgrade_kubectl_cmd + ['get', 'node', kube_upgrade_node_name, '-o', 'jsonpath={.status.nodeInfo.kubeletVersion} {.status.conditions[?(@.type==\"Ready\")].status}'] }}"
+          register: kube_upgrade_ready
+          until: kube_upgrade_ready.rc == 0 and kube_upgrade_ready.stdout == 'v' ~ kube_upgrade_target ~ ' True'
+          retries: "{{ kube_upgrade_ready_retries }}"
+          delay: "{{ kube_upgrade_ready_delay }}"
+          changed_when: false
+
+      always:
+        # Runs even if a step above failed, so the node is never left cordoned.
+        - name: Uncordon {{ kube_upgrade_node_name }}
+          delegate_to: localhost
+          become: false
+          command:
+            argv: "{{ kube_upgrade_kubectl_cmd + ['uncordon', kube_upgrade_node_name] }}"
+          register: kube_upgrade_uncordon
+          until: kube_upgrade_uncordon.rc == 0
+          retries: "{{ kube_upgrade_ready_retries }}"
+          delay: "{{ kube_upgrade_ready_delay }}"
+          changed_when: "'already uncordoned' not in kube_upgrade_uncordon.stdout"
+
+    - name: Wait for all pods to be Running or Completed before the next node
+      delegate_to: localhost
+      become: false
+      command:
+        argv: "{{ kube_upgrade_kubectl_cmd + ['get', 'pods', '--all-namespaces', '--field-selector=status.phase!=Running,status.phase!=Succeeded', '-o', 'name'] }}"
+      register: kube_upgrade_unsettled
+      until: kube_upgrade_unsettled.rc == 0 and kube_upgrade_unsettled.stdout | trim == ""
+      retries: "{{ kube_upgrade_settle_retries }}"
+      delay: "{{ kube_upgrade_settle_delay }}"
+      changed_when: false

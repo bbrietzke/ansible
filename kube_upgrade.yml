@@ -1,0 +1,41 @@
+---
+# Upgrades Kubernetes itself (kubeadm, kubelet, kubectl) with kubeadm, following
+# the upstream kubeadm upgrade procedure. No other packages are touched and
+# nothing is rebooted; use kube_update.yml for OS updates.
+#
+#   make kube-upgrade VERSION=1.37.2    (always prompts for the sudo password)
+#
+# Order: pre-flight checks on every node, then the control plane, then the
+# workers, one node at a time. Any failure stops the whole run. kubeadm
+# can't skip minor versions, so go one minor version at a time
+# (1.37.x -> 1.38.x -> 1.39.x).
+#
+# kubectl runs on the controller, so its kubeconfig must reach the cluster.
+- name: Pre-flight checks for the Kubernetes upgrade
+  hosts: controlplane:workers
+  become: yes
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: Run pre-flight checks
+      include_role:
+        name: kube_version_upgrade
+        tasks_from: preflight
+
+- name: Upgrade Kubernetes on the control plane
+  hosts: controlplane
+  become: yes
+  gather_facts: no
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - kube_version_upgrade
+
+- name: Upgrade Kubernetes on the worker nodes
+  hosts: workers
+  become: yes
+  gather_facts: no
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - kube_version_upgrade

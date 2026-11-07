@@ -30,6 +30,7 @@ Everything should be driven through the _Makefile_.  Most targets use the `apart
 * `make slurm` - Install the SLURM controllers and workers.
 * `make kube` - Install the base packages and set up the NFS servers and clients.
 * `make kube-update` - Rolling update of the Kubernetes nodes, one at a time.
+* `make kube-upgrade VERSION=1.37.2` - Upgrade Kubernetes itself with kubeadm, control plane first, then the workers.
 * `make openclaw` - Set up the OpenClaw agent boxes.
 * `make docs` - Build the docs and upload them to gh-pages.
 
@@ -71,6 +72,12 @@ make shutdown DEFAULT_GROUP=basement
 * `kube_update.yml` - Updates the Kubernetes nodes one at a time, workers first and then the control plane.  Each node gets drained (ignoring daemon-sets and deleting empty-dir data), apt updated, full-upgraded and autoremoved, rebooted if anything changed, and then uncordoned whether it rebooted or not.  It waits for the node to come back and for all the pods to settle before moving on to the next one, and stops everything if a node fails.
 * `make kube-update` - it always asks for the sudo password, and checks that sudo works on every node before it drains anything.
 * kubectl runs on the machine you run `make` from, so its kubeconfig needs to be able to reach the cluster.  The kubernetes packages are kept on hold so they only get upgraded through kubeadm.
+
+### Kube Upgrade
+* `kube_upgrade.yml` - Upgrades Kubernetes itself (kubeadm, kubelet and kubectl) and nothing else; no OS updates and no reboots.  It does calliope (the control plane) first and then the workers, one at a time, following the kubeadm upgrade steps: upgrade kubeadm, run `kubeadm upgrade apply` on the control plane (or `kubeadm upgrade node` on the workers), then drain the node, upgrade the kubelet and kubectl, restart the kubelet and uncordon it.
+* `make kube-upgrade VERSION=1.37.2` - it always asks for the sudo password.
+* Before it touches anything, it checks sudo on every node, that every node is Ready, that the version isn't a downgrade and doesn't skip a minor version, and that the packages are actually in the apt repository.  kubeadm can't skip minor versions, so go one at a time (1.37 to 1.38 to 1.39).
+* Nodes that are already on the version get skipped, the kubernetes packages are put back on hold afterwards, and the node is always uncordoned, even if something fails.
 
 ### OpenClaw
 * `openclaw-agents.yml` - Installs the base packages and users, plus the Prometheus node exporter binary, on the _agents_ group.

@@ -1,0 +1,24 @@
+---
+# Same repository definition as roles/kubernetes, so both roles agree on it.
+- name: Install python3-debian (required by deb822_repository)
+  apt:
+    name: python3-debian
+    state: present
+
+- name: Remove the hand-made kubernetes.list (replaced by kubernetes.sources)
+  file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+
+- name: Install Kubernetes v{{ kube_upgrade_minor }} APT Repository
+  deb822_repository:
+    name: kubernetes
+    types: deb
+    uris: "https://pkgs.k8s.io/core:/stable:/v{{ kube_upgrade_minor }}/deb/"
+    suites: "/"
+    signed_by: "https://pkgs.k8s.io/core:/stable:/v{{ kube_upgrade_minor }}/deb/Release.key"
+    state: present
+
+- name: Update the apt cache
+  apt:
+    update_cache: yes

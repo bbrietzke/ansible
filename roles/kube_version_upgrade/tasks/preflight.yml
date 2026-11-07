@@ -1,0 +1,60 @@
+---
+# Runs against every node before anything is changed on any of them.
+- name: Check that a valid target version was given
+  assert:
+    that:
+      - kube_upgrade_version is defined
+      - kube_upgrade_target is match('^[0-9]+\.[0-9]+\.[0-9]+$')
+    fail_msg: "Set kube_upgrade_version to a release like 1.37.2 (make kube-upgrade VERSION=1.37.2)"
+  run_once: true
+
+- name: Get the current control-plane version
+  delegate_to: localhost
+  become: false
+  run_once: true
+  command:
+    argv: "{{ kube_upgrade_kubectl_cmd + ['version', '-o', 'json'] }}"
+  register: kube_upgrade_version_json
+  changed_when: false
+
+- name: Check that the target is not a downgrade and skips no minor versions
+  vars:
+    current: "{{ (kube_upgrade_version_json.stdout | from_json).serverVersion.gitVersion | regex_replace('^v', '') }}"
+    current_minor: "{{ current.split('.')[1] | int }}"
+    target_minor: "{{ kube_upgrade_target.split('.')[1] | int }}"
+  assert:
+    that:
+      - kube_upgrade_target is version(current, '>=')
+      - kube_upgrade_target.split('.')[0] == current.split('.')[0]
+      - (target_minor | int) - (current_minor | int) <= 1
+    fail_msg: >-
+      Cluster is on {{ current }}; {{ kube_upgrade_target }} is not allowed. kubeadm upgrades
+      can't downgrade or skip minor versions, so upgrade one minor version at a time.
+    success_msg: "Cluster is on {{ current }}, upgrading to {{ kube_upgrade_target }}"
+  run_once: true
+
+- name: Check that every node is Ready
+  delegate_to: localhost
+  become: false
+  run_once: true
+  command:
+    argv: "{{ kube_upgrade_kubectl_cmd + ['get', 'nodes', '-o', 'jsonpath={range .items[*]}{.metadata.name}={.status.conditions[?(@.type==\"Ready\")].status}{\"\\n\"}{end}'] }}"
+  register: kube_upgrade_nodes_ready
+  changed_when: false
+  failed_when: kube_upgrade_nodes_ready.rc != 0 or (kube_upgrade_nodes_ready.stdout_lines | reject('match', '.*=True$') | list | length > 0)
+
+- name: Check SSH and sudo
+  command: "true"
+  changed_when: false
+
+- name: Point the Kubernetes apt repository at v{{ kube_upgrade_minor }}
+  include_tasks: repo.yml
+
+- name: Check that v{{ kube_upgrade_target }} packages are available
+  command: apt-cache madison kubeadm kubelet kubectl
+  register: kube_upgrade_madison
+  changed_when: false
+  failed_when: >-
+    kube_upgrade_madison.stdout_lines
+    | select('search', '\| ' ~ (kube_upgrade_target | regex_escape) ~ '-')
+    | map('split', '|') | map('first') | map('trim') | unique | length < 3

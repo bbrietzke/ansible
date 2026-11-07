@@ -1,0 +1,27 @@
+---
+# Target Kubernetes version, e.g. "1.37.2" (a leading "v" is ignored).
+# Required; pass it with -e kube_upgrade_version=1.37.2 or make kube-upgrade VERSION=1.37.2
+# kube_upgrade_version:
+
+kube_upgrade_target: "{{ kube_upgrade_version | string | regex_replace('^v', '') }}"
+kube_upgrade_minor: "{{ kube_upgrade_target.split('.')[:2] | join('.') }}"
+
+# kubectl runs on the Ansible controller (delegate_to: localhost).
+kube_upgrade_kubectl: kubectl
+# Empty means the controller's current kubeconfig context.
+kube_upgrade_context: ""
+kube_upgrade_node_name: "{{ inventory_hostname }}"
+kube_upgrade_kubectl_cmd: "{{ [kube_upgrade_kubectl] + (['--context', kube_upgrade_context] if kube_upgrade_context else []) }}"
+
+# The first control-plane node runs `kubeadm upgrade apply`; any others run `kubeadm upgrade node`.
+kube_upgrade_first_control_plane: "{{ groups['controlplane'] | first }}"
+
+kube_upgrade_drain_timeout: 15m
+
+# Waiting for the API server / node to report Ready on the new version.
+kube_upgrade_ready_retries: 60
+kube_upgrade_ready_delay: 10
+
+# Waiting for all pods to be Running/Succeeded before moving to the next node.
+kube_upgrade_settle_retries: 60
+kube_upgrade_settle_delay: 10

@@ -23,6 +23,7 @@
     patterns:
       - "pkgs_k8s_io_*.list"
       - "apt_kubernetes_io*.list"
+      - "kubernetes.list"
   register: legacy_k8s_sources
   tags:
     - sw
