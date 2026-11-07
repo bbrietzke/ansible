@@ -8,16 +8,14 @@ endif::[]
 
 :Author:    Brian Brietzke
 :Email:     bbrietzke+github.com
-:Revision:  2
+:Revision:  3
 
 == My Ansible Pipeline
 This is the copy of the ansible pipeline that I use to maintain my home networking infrastructure. 
 
-My personal infrastructure is pretty simple, it's generally a seven node Raspberry Pi 4 cluster with a Raspberry Pi 3 as a resource server.
+My personal infrastructure has grown a bit over time.  It's a four node Kubernetes cluster (one control plane and three workers), a handful of OpenClaw agent boxes, some machines in the basement and the apartment, and a couple of Raspberry Pis (octopi and retropie).
 
-I also have a Raspberry Pi 4 that i use as a desktop machine.
-
-All of the machines are loaded with Ubuntu 20.04.  I have used Rasbian in the past and it works well, i just wanted to try Ubuntu this time.
+All of the Ubuntu machines are loaded with Ubuntu 26.04 LTS.
 
 [NOTE]
 ====
@@ -26,31 +24,18 @@ All of this works for me and may not work for you.  You can certainly take this 
 Just don't blame me if it doesn't work the way you expect.
 ====
 
-== SD Card Setup
-The Makefile in the root of the directory contains commands to format the SDCard for the Pi.  
-
-You will need to download the img file from either Ubuntu or Rasbian websites and copy them to the 'images' directory.  Take a copy of the name and update the Makefile to have the correct or new name and then you can execute:
+== Running the Playbooks
+Everything is driven through the Makefile in the root of the directory.  For example:
 
 [source,bash]
-make rasbian
+make update EXE_OPTIONS=--ask-become-pass
 
-or 
-
-[source,bash]
-make ubuntu
-
-to have it format and fix up the SDCard.  If you are on OSX, it will actually talk to you when you need to update something or upon creation.
-
-If you want to do things the hard way, then you can do something along the lines of:
+or
 
 [source,bash]
-diskutil unmountDisk /dev/disk2 && \
-sudo dd bs=1m if=~/Downloads/2020-02-13-raspbian-buster-lite.img of=/dev/rdisk2 && \
-sleep 3 && \
-touch /Volumes/boot/ssh && \
-diskutil unmountDisk /dev/disk2
+make kube-update EXE_OPTIONS=--ask-become-pass
 
-and it will do the rest for you.
+The full list of commands, playbooks and what they do is in link:index.md[index.md].
 
 == Directory Layout
-I try to follow the ansible best practices that can be found at https://docs.ansible.com/ansible/2.8/user_guide/playbooks_best_practices.html#directory-layout[Playbook Best Practices], except i moved the playbooks into thier own folder.
+I try to follow the ansible best practices that can be found at https://docs.ansible.com/ansible/latest/tips_tricks/sample_setup.html[Sample Ansible Setup], with the playbooks in the root of the directory, the inventories in `inventories` and the roles in `roles`.
