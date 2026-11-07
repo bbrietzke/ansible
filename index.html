@@ -1,53 +1,46 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="None">
-  
-  
-  <link rel="shortcut icon" href="img/favicon.ico">
-  <title>Raspberry Pi Ansible Setup</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700" />
-
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="css/theme_extra.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Home";
-    var mkdocs_page_input_path = "index.md";
-    var mkdocs_page_url = null;
-  </script>
-  
-  <script src="js/jquery-2.1.1.min.js" defer></script>
-  <script src="js/modernizr-2.8.3.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-  <script>hljs.initHighlightingOnLoad();</script> 
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Ansible playbooks and roles for maintaining my home network infrastructure." />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Home Network Ansible Setup</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Home";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
     <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href="." class="icon icon-home"> Raspberry Pi Ansible Setup</a>
-        <div role="search">
+          <a href="." class="icon icon-home"> Home Network Ansible Setup
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
-      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-                <ul class="current">
-                    <li class="toctree-l1 current"><a class="reference internal current" href=".">Home</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Home</a>
     <ul class="current">
     <li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a>
         <ul>
@@ -59,115 +52,147 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#playbook-details">Playbook Details</a>
         <ul>
-    <li class="toctree-l3"><a class="reference internal" href="#kube">Kube</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#docker">Docker</a>
-    </li>
-    <li class="toctree-l3"><a class="reference internal" href="#jenkins">Jenkins</a>
+    <li class="toctree-l3"><a class="reference internal" href="#default">Default</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#updates">Updates</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#reboot">Reboot</a>
     </li>
+    <li class="toctree-l3"><a class="reference internal" href="#shutdown">Shutdown</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#slurm">Slurm</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#kube">Kube</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#kube-update">Kube Update</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#openclaw">OpenClaw</a>
+    </li>
         </ul>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#roles">Roles</a>
+    </li>
     </ul>
-                    </li>
-                </ul>
+                </li>
+              </ul>
       </div>
     </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href=".">Raspberry Pi Ansible Setup</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">Home Network Ansible Setup</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href=".">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Home</li>
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Home</li>
     <li class="wy-breadcrumbs-aside">
-      
+          <a href="https://github.com/bbrietzke/ansible/edit/master/docs/index.md" class="icon icon-github"> Edit on GitHub</a>
     </li>
   </ul>
-  
   <hr/>
 </div>
-
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
-                <h1 id="setting-up-raspberry-pi-with-ansible">Setting up Raspberry Pi with Ansible</h1>
-<p>A set of helpful commands and tools to make setting up a Raspberry Pi a little easier.</p>
+                <h1 id="setting-up-my-network-with-ansible">Setting up my network with Ansible</h1>
+<p>A set of helpful commands and tools to make setting up and maintaining my network a little easier.</p>
 <h2 id="setup">Setup</h2>
-<p>Following <a href="https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html">Ansible best practices</a>, the project is structured
-with an inventories folder that contains the list of hosts that you will want to talk to.  There is a <em>work</em> and a <em>home</em> option that contains the
-names/ips and usernames of the host machines.  Also included are the various <em>children</em> which relates to the groups that contain the roles that you will implement the software and configuration that will be installed.</p>
-<p>The bootable images should be saved in the 'image' directory.  Make sure you updated the image names in the Makefile so the 'image' creation commands work.</p>
+<p>Following <a href="https://docs.ansible.com/ansible/latest/tips_tricks/sample_setup.html">Ansible best practices</a>, the project is structured
+with an inventories folder that contains the list of hosts that you will want to talk to.  Each inventory contains the
+names/ips and usernames of the host machines, along with the various <em>children</em>, which are the groups that the playbooks target to decide what software and configuration gets installed where.</p>
+<p>The inventories that are present right now:</p>
+<ul>
+<li><code>apartment</code> - the default inventory for the Makefile; has the <em>servers</em>, <em>clients</em> and <em>main</em> groups.</li>
+<li><code>basement</code> - the machines in the basement; has the <em>shutdown</em> group.</li>
+<li><code>home</code> - the Raspberry Pis (octopi and retropie).</li>
+<li><code>kubernetes</code> - the Kubernetes cluster; has the <em>controlplane</em> and <em>workers</em> groups.</li>
+<li><code>openclaw</code> - the OpenClaw agent boxes; has the <em>agents</em> group.</li>
+</ul>
+<p>All of the Ubuntu machines are expected to be on Ubuntu 26.04 LTS (<em>resolute</em>), which is set with <code>ubuntu_version</code> in the inventories.</p>
 <h3 id="personalization">Personalization</h3>
-<p>Additional directories can be added to inventories and setup similiar to home or work depending on how you want things to work or look.</p>
+<p>Additional directories can be added to inventories and set up similar to the ones above depending on how you want things to work or look.</p>
 <h2 id="commands">Commands</h2>
-<p>Everything should be driven through the <em>Makefile</em>.</p>
+<p>Everything should be driven through the <em>Makefile</em>.  Most targets use the <code>apartment</code> inventory unless you tell it otherwise with <code>DEFAULT_GROUP</code>.</p>
 <ul>
-<li><code>make home</code> - Create a new project.</li>
-<li><code>make rasbian</code> - create the rasbian image.</li>
-<li><code>make ubuntu</code> - create the ubuntu image.</li>
-<li><code>make docs</code> - Build the docs and upload them to gh-pages.</li>
-<li><code>make reboot</code> - reboot all the Raspberry Pi's</li>
-<li><code>make docker</code> - Install the docker role</li>
-<li><code>make kube</code> - Install Kubernetes</li>
-<li><code>make volumes</code> - Build NFS volumes</li>
-<li><code>make buildServers</code> - Install Jenkins CI/CD</li>
-<li><code>make docker</code> - Install docker</li>
+<li><code>make default</code> - Install the base packages and users.</li>
+<li><code>make update</code> - Update and upgrade everything.</li>
 <li><code>make reboot</code> - REBOOT!</li>
+<li><code>make shutdown</code> - Shut down the machines in the <em>shutdown</em> group.</li>
+<li><code>make slurm</code> - Install the SLURM controllers and workers.</li>
+<li><code>make kube</code> - Install the base packages and set up the NFS servers and clients.</li>
+<li><code>make kube-update</code> - Rolling update of the Kubernetes nodes, one at a time.</li>
+<li><code>make openclaw</code> - Set up the OpenClaw agent boxes.</li>
+<li><code>make docs</code> - Build the docs and upload them to gh-pages.</li>
 </ul>
+<p>Extra options for <code>ansible-playbook</code> get passed through with <code>EXE_OPTIONS</code>, and a different inventory can be picked with <code>DEFAULT_GROUP</code>:</p>
+<pre><code>make update EXE_OPTIONS=--ask-become-pass
+make reboot EXE_OPTIONS=&quot;--ask-become-pass --limit eris&quot;
+make shutdown DEFAULT_GROUP=basement
+</code></pre>
 <h2 id="playbook-details">Playbook Details</h2>
-<h3 id="kube">Kube</h3>
+<h3 id="default">Default</h3>
 <ul>
-<li>Installs kubernetes and docker on target machines; install an NFS server on a seperate machine for persistent volumes.</li>
-</ul>
-<h3 id="docker">Docker</h3>
-<ul>
-<li>Installs Docker from the docker repositories.</li>
-</ul>
-<h3 id="jenkins">Jenkins</h3>
-<ul>
-<li>Installs jenkins, an NFS client and docker; mounts an NFS drive from the designated server</li>
+<li><code>default.yml</code> - Installs the base packages (avahi, screen, tmux, zsh) and creates the users, pulling their SSH keys from GitHub; also installs the QEMU guest agent on anything in the <em>qemu</em> group.</li>
+<li><code>make default</code></li>
 </ul>
 <h3 id="updates">Updates</h3>
 <ul>
-<li>Updates the computers based on model type; only does two at a time</li>
+<li><code>updates.yml</code> - Does an apt update and dist-upgrade on every machine in the inventory, then cleans up and autoremoves old packages.  Does them all at once, and doesn't reboot.</li>
+<li><code>make update</code></li>
 </ul>
 <h3 id="reboot">Reboot</h3>
 <ul>
-<li>Well, it reboots the machines</li>
+<li><code>reboot.yml</code> - Well, it reboots the machines; only does two at a time.</li>
+<li><code>make reboot</code></li>
 </ul>
+<h3 id="shutdown">Shutdown</h3>
+<ul>
+<li><code>shutdown.yml</code> - Shuts down everything in the <em>shutdown</em> group, which only lives in the <code>basement</code> inventory.</li>
+<li><code>make shutdown DEFAULT_GROUP=basement</code></li>
+</ul>
+<h3 id="slurm">Slurm</h3>
+<ul>
+<li><code>slurm.yml</code> - Installs the SLURM controller on the <em>controllers</em> group and the SLURM workers on the <em>workers</em> group, and writes the shared slurm config to both.</li>
+<li><code>make slurm DEFAULT_GROUP=&lt;inventory&gt;</code></li>
+<li>None of the inventories have a <em>controllers</em> group right now, and <em>workers</em> only exists in the <code>kubernetes</code> inventory, so don't point this at that one unless you want SLURM on your Kubernetes nodes.</li>
+</ul>
+<h3 id="kube">Kube</h3>
+<ul>
+<li><code>local_kube.yml</code> - Despite the name, it doesn't install Kubernetes.  It installs the base packages on everything, the QEMU guest agent on the <em>qemu</em> group, sets up an NFS server on the <em>servers</em> group (with <em>shared</em>, <em>data_redis</em> and <em>data_jenkins</em> shares) and the NFS client on the <em>clients</em> group.</li>
+<li><code>make kube</code></li>
+</ul>
+<h3 id="kube-update">Kube Update</h3>
+<ul>
+<li><code>kube_update.yml</code> - Updates the Kubernetes nodes one at a time, workers first and then the control plane.  Each node gets drained (ignoring daemon-sets and deleting empty-dir data), apt updated, full-upgraded and autoremoved, rebooted if anything changed, and then uncordoned whether it rebooted or not.  It waits for the node to come back and for all the pods to settle before moving on to the next one, and stops everything if a node fails.</li>
+<li><code>make kube-update EXE_OPTIONS=--ask-become-pass</code></li>
+<li>kubectl runs on the machine you run <code>make</code> from, so its kubeconfig needs to be able to reach the cluster.  The kubernetes packages are kept on hold so they only get upgraded through kubeadm.</li>
+</ul>
+<h3 id="openclaw">OpenClaw</h3>
+<ul>
+<li><code>openclaw-agents.yml</code> - Installs the base packages and users, plus the Prometheus node exporter binary, on the <em>agents</em> group.</li>
+<li><code>make openclaw</code></li>
+</ul>
+<h2 id="roles">Roles</h2>
+<p>The roles live in the <code>roles</code> folder.  The ones used by the playbooks above are <em>default</em>, <em>qemu_client</em>, <em>update</em>, <em>nfs_server</em>, <em>nfs_client</em>, <em>slurm</em>, <em>slurmctrl</em>, <em>slurm_conf</em>, <em>kube_node_update</em> and <em>node_exporter_binary</em>.</p>
+<p>The rest are there to be pulled into a playbook when I need them: <em>alertmanager</em>, <em>apt_cacher</em>, <em>apt_cacher_client</em>, <em>consul</em>, <em>docker</em>, <em>elasticsearch</em>, <em>java</em>, <em>kube_config</em>, <em>kubernetes</em>, <em>memcached</em>, <em>mqtt</em>, <em>nginx</em>, <em>node_exporter</em>, <em>nodejs</em>, <em>octopi_camera</em>, <em>postgresql</em>, <em>print_server</em>, <em>prometheus</em>, <em>redis</em>, <em>samba_server</em>, <em>subversion</em> and <em>vault</em>.</p>
               
             </div>
-          </div>
-          <footer>
-  
+          </div><footer>
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
   </div>
 
-  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
+          
         </div>
       </div>
 
@@ -175,27 +200,32 @@ names/ips and usernames of the host machines.  Also included are the various <em
 
   </div>
 
-  <div class="rst-versions" role="note" aria-label="versions">
+  <div class="rst-versions" role="note" aria-label="Versions">
   <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/bbrietzke/ansible" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
     
     
     
   </span>
 </div>
-    <script>var base_url = '.';</script>
-    <script src="js/theme_extra.js" defer></script>
-    <script src="js/theme.js" defer></script>
-      <script src="search/main.js" defer></script>
-    <script defer>
-        window.onload = function () {
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
             SphinxRtdTheme.Navigation.enable(true);
-        };
+        });
     </script>
 
 </body>
 </html>
 
 <!--
-MkDocs version : 1.2.3
-Build Date UTC : 2021-12-07 03:05:06.730526+00:00
+MkDocs version : 1.6.1
+Build Date UTC : 2026-11-07 14:08:47.078753+00:00
 -->
