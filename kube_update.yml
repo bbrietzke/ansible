@@ -4,9 +4,24 @@
 #
 #   make kube-update EXE_OPTIONS=--ask-become-pass
 #
+# Workers go first so the API server stays up while they roll, and so a bad
+# round of updates shows up on a worker before it reaches the control plane.
+# Any failure stops the whole run, including the control-plane play.
+#
 # kubectl runs on the controller, so its kubeconfig must reach the cluster.
-- name: Rolling update of Kubernetes nodes
-  hosts: all
+- name: Rolling update of Kubernetes worker nodes
+  hosts: workers
+  become: yes
+  gather_facts: no
+  serial: 1
+  any_errors_fatal: true
+  roles:
+    - kube_node_update
+
+# The API server is unavailable while a control-plane node reboots; the role
+# retries the Ready check and uncordon until it comes back.
+- name: Rolling update of Kubernetes control-plane nodes
+  hosts: controlplane
   become: yes
   gather_facts: no
   serial: 1

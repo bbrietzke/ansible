@@ -1,10 +1,15 @@
 ---
 all:
   children:
-    agents:
+    controlplane:
       hosts:
         calliope:
           ansible_host: 192.168.3.11
+      vars:
+        ansible_user: bbrietzke
+        ansible_become: true
+    workers:
+      hosts:
         clio:
           ansible_host: 192.168.3.13
         erato:
