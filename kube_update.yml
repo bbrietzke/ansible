@@ -2,13 +2,26 @@
 # Rolling OS update of the Kubernetes nodes, one node at a time:
 # drain -> apt full-upgrade -> autoremove -> reboot (if needed) -> uncordon.
 #
-#   make kube-update EXE_OPTIONS=--ask-become-pass
+#   make kube-update    (always prompts for the sudo password)
 #
 # Workers go first so the API server stays up while they roll, and so a bad
 # round of updates shows up on a worker before it reaches the control plane.
 # Any failure stops the whole run, including the control-plane play.
 #
 # kubectl runs on the controller, so its kubeconfig must reach the cluster.
+
+# Fail fast, before anything is drained, if any node is unreachable or sudo
+# doesn't work (e.g. the run was started without --ask-become-pass).
+- name: Pre-flight check of Kubernetes nodes
+  hosts: workers:controlplane
+  become: yes
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: Check SSH and sudo on every node
+      command: "true"
+      changed_when: false
+
 - name: Rolling update of Kubernetes worker nodes
   hosts: workers
   become: yes

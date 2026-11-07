@@ -69,7 +69,7 @@ make shutdown DEFAULT_GROUP=basement
 
 ### Kube Update
 * `kube_update.yml` - Updates the Kubernetes nodes one at a time, workers first and then the control plane.  Each node gets drained (ignoring daemon-sets and deleting empty-dir data), apt updated, full-upgraded and autoremoved, rebooted if anything changed, and then uncordoned whether it rebooted or not.  It waits for the node to come back and for all the pods to settle before moving on to the next one, and stops everything if a node fails.
-* `make kube-update EXE_OPTIONS=--ask-become-pass`
+* `make kube-update` - it always asks for the sudo password, and checks that sudo works on every node before it drains anything.
 * kubectl runs on the machine you run `make` from, so its kubeconfig needs to be able to reach the cluster.  The kubernetes packages are kept on hold so they only get upgraded through kubeadm.
 
 ### OpenClaw

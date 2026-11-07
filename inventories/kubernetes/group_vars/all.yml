@@ -2,3 +2,7 @@
 ansible_python_interpreter: /usr/bin/python3
 ansible_pip_exe: /usr/bin/python3 -m pip
 # ansible_user is set per group in ../hosts (group_vars/all would override it)
+# Ubuntu 26.04 defaults sudo to sudo-rs, whose password prompt Ansible's sudo
+# become plugin can't detect ("Timeout waiting for privilege escalation
+# prompt"). The classic sudo is still installed as sudo.ws, so use that.
+ansible_become_exe: sudo.ws

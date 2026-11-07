@@ -33,7 +33,7 @@ make update EXE_OPTIONS=--ask-become-pass
 or
 
 [source,bash]
-make kube-update EXE_OPTIONS=--ask-become-pass
+make kube-update
 
 The full list of commands, playbooks and what they do is in link:index.md[index.md].
 

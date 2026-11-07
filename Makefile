@@ -34,7 +34,7 @@ kube:
 	$(EXE) $(EXE_OPTIONS) -i inventories/$(DEFAULT_GROUP)/hosts local_kube.yml
 
 kube-update:
-	$(EXE) $(EXE_OPTIONS) -i inventories/kubernetes/hosts kube_update.yml
+	$(EXE) --ask-become-pass $(EXE_OPTIONS) -i inventories/kubernetes/hosts kube_update.yml
 
 openclaw:
 	$(EXE) $(EXE_OPTIONS) -i inventories/openclaw/hosts openclaw-agents.yml
