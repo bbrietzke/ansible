@@ -1,5 +1,41 @@
 ---
+# Check for updates before touching the node, so a node with nothing to do is
+# never cordoned or drained. None of these steps affect running workloads.
+- name: Keep Kubernetes packages on hold
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: "{{ kube_update_held_packages }}"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  changed_when: false
+
+# Simulated full-upgrade (apt-get -s); held packages don't count.
+- name: Check {{ kube_update_node_name }} for pending updates
+  apt:
+    upgrade: dist
+  check_mode: true
+  register: kube_update_pending
+
+# A reboot may already be pending from an earlier run or unattended-upgrades.
+- name: Check whether the OS is already asking for a reboot
+  stat:
+    path: /var/run/reboot-required
+  register: kube_update_reboot_pending
+
+- name: Decide whether {{ kube_update_node_name }} needs updating
+  set_fact:
+    kube_update_needed: "{{ kube_update_pending.changed or kube_update_reboot_pending.stat.exists }}"
+
+- name: Skip {{ kube_update_node_name }}, nothing to update
+  debug:
+    msg: "No pending updates and no reboot required; leaving {{ kube_update_node_name }} in service."
+  when: not kube_update_needed
+
 - name: Update Kubernetes node {{ kube_update_node_name }}
+  when: kube_update_needed
   block:
     - name: Cordon and drain {{ kube_update_node_name }}
       delegate_to: localhost
@@ -8,15 +44,8 @@
         argv: "{{ kube_update_kubectl_cmd + ['drain', kube_update_node_name, '--ignore-daemonsets', '--delete-emptydir-data', '--timeout=' ~ kube_update_drain_timeout] }}"
       changed_when: true
 
-    - name: Keep Kubernetes packages on hold
-      dpkg_selections:
-        name: "{{ item }}"
-        selection: hold
-      loop: "{{ kube_update_held_packages }}"
-
-    - name: Update apt cache and full-upgrade
+    - name: Full-upgrade
       apt:
-        update_cache: yes
         upgrade: dist
       register: kube_update_upgrade
 
@@ -61,6 +90,7 @@
       changed_when: "'already uncordoned' not in kube_update_uncordon.stdout"
 
 - name: Wait for all pods to be Running or Completed before the next node
+  when: kube_update_needed
   delegate_to: localhost
   become: false
   command:
